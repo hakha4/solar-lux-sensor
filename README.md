@@ -160,3 +160,18 @@ Testa med: `mosquitto_sub -h <broker> -u <user> -P <pass> -t "solar/#" -v`
 ## Byta sensor
 
 Koppla in den andra sensorn, gå till `/config` och välj sensortyp. Glömmer du att byta i inställningarna hittar firmware ändå den inkopplade sensorn automatiskt (en varning loggas).
+
+## Windows Smart App Control blockerar kompileringen
+
+Smart App Control (Windows 11) stoppar osignerade program, bl.a. ESP32-verktygen (`xtensa/riscv32-gcc`, `esptool.exe`, `ctags`) som Arduino IDE använder. Alternativ:
+
+1. **Flasha färdig firmware via webbläsaren (rekommenderas, ingen kompilering lokalt)**
+   - Öppna <https://espressif.github.io/esptool-js/> i Chrome/Edge, anslut ESP32-C3 via USB, klicka *Connect* och välj COM-porten.
+     (Startar den inte: håll **BOOT** nedtryckt, tryck **RESET**/koppla in USB, släpp BOOT.)
+   - Flash Address `0x0`, fil `lux_sensor_c3_full_0x0.bin` → *Program*. Tryck RESET efteråt.
+   - Firmwaren har inga inloggningsuppgifter → enheten startar portalen **LuxSensor-XXXXXX** → anslut och öppna `192.168.4.1`, fyll i WiFi/IP/MQTT/plats/sensor.
+   - Senare uppdateringar: `http://<enhetens-ip>/update` med `lux_sensor_c3_ota.bin` (ingen USB behövs).
+2. **Kompilera i WSL** (Linux-verktyg berörs inte av Smart App Control): `arduino-cli compile --fqbn esp32:esp32:esp32c3:CDCOnBoot=cdc --export-binaries lux_sensor`, flasha sedan `.bin` enligt punkt 1.
+3. **Stäng av Smart App Control** (Inställningar → Sekretess och säkerhet → Windows-säkerhet → App- och webbläsarkontroll → Smart App Control → Av). OBS: på många Windows-versioner kan den inte slås på igen utan ominstallation.
+
+Byggflagga för ESP32-C3 SuperMini: *USB CDC On Boot = Enabled* (annars syns ingen seriell utskrift).
